@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tyre Monitoring Dashboard</title>
+    <!-- Tailwind CSS untuk Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PapaParse untuk Membaca CSV -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <!-- Header -->
+    <header class="bg-blue-900 text-white p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold">🛞 Tyre Monitoring System</h1>
+            <span id="status-data" class="text-sm bg-yellow-500 px-2 py-1 rounded text-black font-semibold">Memuat Data...</span>
+        </div>
+    </header>
+
+    <div class="container mx-auto flex flex-col md:flex-row mt-6 gap-6 px-4">
+        
+        <!-- Sidebar Menu Navigasi -->
+        <aside class="w-full md:w-1/4 bg-white p-4 rounded-lg shadow-md h-fit">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Pilih Dashboard</h2>
+            <nav class="flex flex-col gap-2">
+                <button onclick="switchTab(1)" id="btn-tab-1" class="tab-btn text-left px-3 py-2 rounded bg-blue-600 text-white font-medium">1. Achievement Program</button>
+                <button onclick="switchTab(2)" id="btn-tab-2" class="tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700">2. Tyre Pressure Inspection</button>
+                <button onclick="switchTab(3)" id="btn-tab-3" class="tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700">3. Rolling Tyre</button>
+                <button onclick="switchTab(4)" id="btn-tab-4" class="tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700">4. Backlog Tyre</button>
+                <button onclick="switchTab(5)" id="btn-tab-5" class="tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700">5. Repair Tyre</button>
+                <button onclick="switchTab(6)" id="btn-tab-6" class="tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700">6. Observasi Area Kerja</button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="w-full md:w-3/4 bg-white p-6 rounded-lg shadow-md">
+            
+            <!-- Filter Section (Dinamis per Tab) -->
+            <div id="filter-container" class="mb-6 p-4 bg-gray-50 rounded border flex flex-wrap gap-4 items-center">
+                <!-- Filter akan dirender lewat JavaScript -->
+            </div>
+
+            <!-- Display Judul Dashboard -->
+            <h2 id="dashboard-title" class="text-2xl font-bold text-gray-800 mb-4">1. Achievement Program Tyre</h2>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto">
+                <table id="data-table" class="min-w-full bg-white border border-gray-200">
+                    <thead class="bg-gray-200 text-gray-700 uppercase text-sm">
+                        <!-- Header Tabel Dinamis -->
+                    </thead>
+                    <tbody class="text-gray-600 text-sm divide-y divide-gray-200">
+                        <!-- Isi Data Dinamis -->
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Script Utama Pengolahan Data -->
+    <script>
+        const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSecE07RLrZyfUlzIKsR-OtX2Ne70t1041dEdedWjA-FneiHc0aBqE5ajjugMKavNCmpnEdlP1SegHn/pub?output=csv";
+        
+        let globalData = [];
+        let currentTab = 1;
+
+        // Ambil Data CSV menggunakan PapaParse
+        Papa.parse(CSV_URL, {
+            download: true,
+            header: false,
+            complete: function(results) {
+                globalData = results.data;
+                document.getElementById('status-data').innerText = "Data Terhubung ✓";
+                document.getElementById('status-data').className = "text-sm bg-green-500 px-2 py-1 rounded text-white font-semibold";
+                renderDashboard(currentTab);
+            },
+            error: function(err) {
+                document.getElementById('status-data').innerText = "Gagal Memuat Data";
+                document.getElementById('status-data').className = "text-sm bg-red-500 px-2 py-1 rounded text-white font-semibold";
+            }
+        });
+
+        function switchTab(tabNumber) {
+            currentTab = tabNumber;
+            // Ubah gaya aktif tombol menu
+            document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+                if((idx + 1) === tabNumber) {
+                    btn.className = "tab-btn text-left px-3 py-2 rounded bg-blue-600 text-white font-medium";
+                } else {
+                    btn.className = "tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700";
+                }
+            });
+            renderDashboard(tabNumber);
+        }
+
+        function renderDashboard(tab) {
+            const titleEl = document.getElementById('dashboard-title');
+            const filterContainer = document.getElementById('filter-container');
+            const theadEl = document.querySelector('#data-table thead');
+            const tbodyEl = document.querySelector('#data-table tbody');
+            
+            filterContainer.innerHTML = '';
+            theadEl.innerHTML = '';
+            tbodyEl.innerHTML = '';
+
+            if(globalData.length === 0) return;
+
+            // Indeks Kolom Berdasarkan Abjad (A=0, B=1, dst.)
+            if(tab === 1) {
+                titleEl.innerText = "1. Achievement Program Tyre";
+                filterContainer.innerHTML = `<span class="font-semibold text-gray-700">Filter Bulan:</span> <select id="f-bulan" class="border p-2 rounded"><option>SEMUA BULAN / YEAR TO DATE</option></select>`;
+                
+                theadEl.innerHTML = `<tr><th class="py-3 px-4 border">Program / Section</th><th class="py-3 px-4 border">Plan</th><th class="py-3 px-4 border">Actual</th><th class="py-3 px-4 border">Achievement</th></tr>`;
+                
+                // Menggabungkan ringkasan data dari beberapa bagian
+                let rowsHtml = '';
+                // Tyre Pressure (Kolom 0, 4, 5, 6)
+                for(let i=1; i<globalData.length; i++) {
+                    if(globalData[i][0]) {
+                        rowsHtml += `<tr class="hover:bg-gray-50"><td class="py-2 px-4 border">Tyre Pressure - ${globalData[i][0]}</td><td class="py-2 px-4 border">${globalData[i][4]||'-'}</td><td class="py-2 px-4 border">${globalData[i][5]||'-'}</td><td class="py-2 px-4 border font-bold">${globalData[i][6]||'-'}</td></tr>`;
+                    }
+                }
+                tbodyEl.innerHTML = rowsHtml;
+
+            } else if(tab === 2) {
+                // 2. TYRE PRESSURE INSPECTION (Filter: A, B, C | Tampil: E, F, G)
+                titleEl.innerText = "2. Tyre Pressure Inspection";
+                setupFilterAndTable(0, 1, 2, [4, 5, 6], ["Plan (Kolom E)", "Actual (Kolom F)", "Achievement (Kolom G)"], ["Section (Kolom A)", "Bulan (Kolom B)", "Tanggal (Kolom C)"]);
+
+            } else if(tab === 3) {
+                // 3. ROLLING TYRE (Filter: J(9), K(10), L(11) | Tampil: N(13), O(14), P(15))
+                titleEl.innerText = "3. Rolling Tyre";
+                setupFilterAndTable(9, 10, 11, [13, 14, 15], ["Plan (Kolom N)", "Actual (Kolom O)", "Achievement (Kolom P)"], ["Section (Kolom J)", "Bulan (Kolom K)", "Tanggal (Kolom L)"]);
+
+            } else if(tab === 4) {
+                // 4. BACKLOG TYRE (Filter: S(18), T(19) | Tampil: V(21), W(22), X(23))
+                titleEl.innerText = "4. Backlog Tyre";
+                setupFilterAndTableOnlyTwo(18, 19, [21, 22, 23], ["Plan (Kolom V)", "Actual (Kolom W)", "Achievement (Kolom X)"], ["Bulan (Kolom S)", "Tanggal (Kolom T)"]);
+
+            } else if(tab === 5) {
+                // 5. REPAIR TYRE (Filter: AA(26), AB(27), AC(28) | Tampil: AE(30), AF(31), AG(32))
+                titleEl.innerText = "5. Repair Tyre";
+                setupFilterAndTable(26, 27, 28, [30, 31, 32], ["Plan (Kolom AE)", "Actual (Kolom AF)", "Achievement (Kolom AG)"], ["Section (Kolom AA)", "Bulan (Kolom AB)", "Tanggal (Kolom AC)"]);
+
+            } else if(tab === 6) {
+                // 6. OBSERVASI AREA KERJA TYRE (Filter: AJ(35), AK(36), AL(37) | Tampil: AN(39), AO(40), AP(41))
+                titleEl.innerText = "6. Observasi Area Kerja Tyre";
+                setupFilterAndTable(35, 36, 37, [39, 40, 41], ["Plan (Kolom AN)", "Actual (Kolom AO)", "Achievement (Kolom AP)"], ["Location (Kolom AJ)", "Bulan (Kolom AK)", "Tanggal (Kolom AL)"]);
+            }
+        }
+
+        // Helper untuk render filter 3 kolom dan tabel data
+        function setupFilterAndTable(f1Idx, f2Idx, f3Idx, targetCols, targetNames, filterLabels) {
+            const filterContainer = document.getElementById('filter-container');
+            const theadEl = document.querySelector('#data-table thead');
+            const tbodyEl = document.querySelector('#data-table tbody');
+
+            // Ambil unik value untuk dropdown filter
+            let f1Set = [...new Set(globalData.slice(1).map(row => row[f1Idx]))].filter(Boolean);
+            let f2Set = [...new Set(globalData.slice(1).map(row => row[f2Idx]))].filter(Boolean);
+            let f3Set = [...new Set(globalData.slice(1).map(row => row[f3Idx]))].filter(Boolean);
+
+            filterContainer.innerHTML = `
+                <div><label class="block text-xs font-bold text-gray-600">${filterLabels[0]}</label><select id="filter-1" class="border p-1.5 rounded text-sm"><option value="ALL">ALL</option>${f1Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+                <div><label class="block text-xs font-bold text-gray-600">${filterLabels[1]}</label><select id="filter-2" class="border p-1.5 rounded text-sm"><option value="ALL">SEMUA BULAN</option>${f2Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+                <div><label class="block text-xs font-bold text-gray-600">${filterLabels[2]}</label><select id="filter-3" class="border p-1.5 rounded text-sm"><option value="ALL">SEMUA TANGGAL</option>${f3Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+            `;
+
+            theadEl.innerHTML = `<tr><th class="py-3 px-4 border">${filterLabels[0]}</th><th class="py-3 px-4 border">${filterLabels[1]}</th><th class="py-3 px-4 border">${filterLabels[2]}</th><th class="py-3 px-4 border">${targetNames[0]}</th><th class="py-3 px-4 border">${targetNames[1]}</th><th class="py-3 px-4 border">${targetNames[2]}</th></tr>`;
+
+            function drawTable() {
+                let val1 = document.getElementById('filter-1').value;
+                let val2 = document.getElementById('filter-2').value;
+                let val3 = document.getElementById('filter-3').value;
+
+                let html = '';
+                for(let i=1; i<globalData.length; i++) {
+                    let r = globalData[i];
+                    if(!r[f1Idx]) continue;
+                    
+                    if(val1 !== 'ALL' && r[f1Idx] !== val1) continue;
+                    if(val2 !== 'ALL' && r[f2Idx] !== val2) continue;
+                    if(val3 !== 'ALL' && r[f3Idx] !== val3) continue;
+
+                    html += `<tr class="hover:bg-gray-50">
+                        <td class="py-2 px-4 border">${r[f1Idx]||'-'}</td>
+                        <td class="py-2 px-4 border">${r[f2Idx]||'-'}</td>
+                        <td class="py-2 px-4 border">${r[f3Idx]||'-'}</td>
+                        <td class="py-2 px-4 border">${r[targetCols[0]]||'-'}</td>
+                        <td class="py-2 px-4 border">${r[targetCols[1]]||'-'}</td>
+                        <td class="py-2 px-4 border font-bold">${r[targetCols[2]]||'-'}</td>
+                    </tr>`;
+                }
+                tbodyEl.innerHTML = html || `<tr><td colspan="6" class="text-center py-4 text-gray-500">Tidak ada data ditemukan</td></tr>`;
+            }
+
+            drawTable();
+            document.getElementById('filter-1').addEventListener('change', drawTable);
+            document.getElementById('filter-2').addEventListener('change', drawTable);
+            document.getElementById('filter-3').addEventListener('change', drawTable);
+        }
+
+        // Helper khusus untuk Backlog (2 Filter)
+        function setupFilterAndTableOnlyTwo(f1Idx, f2Idx, targetCols, targetNames, filterLabels) {
+            const filterContainer = document.getElementById('filter-container');
+            const theadEl = document.querySelector('#data-table thead');
+            const tbodyEl = document.querySelector('#data-table tbody');
+
+            let f1Set = [...new Set(globalData.slice(1).map(row => row[f1Idx]))].filter(Boolean);
+            let f2Set = [...new Set(globalData.slice(1).map(row => row[f2Idx]))].filter(Boolean);
+
+            filterContainer.innerHTML = `
+                <div><label class="block text-xs font-bold text-gray-600">${filterLabels[0]}</label><select id="filter-1" class="border p-1.5 rounded text-sm"><option value="ALL">SEMUA BULAN</option>${f1Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+                <div><label class="block text-xs font-bold text-gray-600">${filterLabels[1]}</label><select id="filter-2" class="border p-1.5 rounded text-sm"><option value="ALL">SEMUA TANGGAL</option>${f2Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+            `;
+
+            theadEl.innerHTML = `<tr><th class="py-3 px-4 border">${filterLabels[0]}</th><th class="py-3 px-4 border">${filterLabels[1]}</th><th class="py-3 px-4 border">${targetNames[0]}</th><th class="py-3 px-4 border">${targetNames[1]}</th><th class="py-3 px-4 border">${targetNames[2]}</th></tr>`;
+
+            function drawTable() {
+                let val1 = document.getElementById('filter-1').value;
+                let val2 = document.getElementById('filter-2').value;
+
+                let html = '';
+                for(let i=1; i<globalData.length; i++) {
+                    let r = globalData[i];
+                    if(!r[f1Idx] && !r[f2Idx]) continue;
+                    
+                    if(val1 !== 'ALL' && r[f1Idx] !== val1) continue;
+                    if(val2 !== 'ALL' && r[f2Idx] !== val2) continue;
+
+                    html += `<tr class="hover:bg-gray-50">
+                        <td class="py-2 px-4 border">${r[f1Idx]||'-'}</td>
+                        <td class="py-2 px-4 border">${r[f2Idx]||'-'}</td>
+                        <td class="py-2 px-4 border">${r[targetCols[0]]||'-'}</td>
+                        <td class="py-2 px-4 border">${r[targetCols[1]]||'-'}</td>
+                        <td class="py-2 px-4 border font-bold">${r[targetCols[2]]||'-'}</td>
+                    </tr>`;
+                }
+                tbodyEl.innerHTML = html || `<tr><td colspan="5" class="text-center py-4 text-gray-500">Tidak ada data ditemukan</td></tr>`;
+            }
+
+            drawTable();
+            document.getElementById('filter-1').addEventListener('change', drawTable);
+            document.getElementById('filter-2').addEventListener('change', drawTable);
+        }
+    </script>
+</body>
+</html>
