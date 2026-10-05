@@ -3,248 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tyre Monitoring Dashboard</title>
-    <!-- Tailwind CSS untuk Styling -->
+    <title>Tyre Monitoring Dashboard System</title>
+    <!-- Tailwind CSS untuk Styling Modern -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- PapaParse untuk Membaca CSV -->
+    <!-- Chart.js untuk Grafik Visualisasi -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- PapaParse untuk Membaca CSV dari Google Sheets -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body { background-color: #0b0f19; color: #f3f4f6; }
+        .card-bg { background-color: #111827; border: 1px solid #1f2937; }
+        .input-dark { background-color: #1f2937; border: 1px solid #374151; color: white; }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Header -->
-    <header class="bg-blue-900 text-white p-4 shadow-md">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold">🛞 Tyre Monitoring System</h1>
-            <span id="status-data" class="text-sm bg-yellow-500 px-2 py-1 rounded text-black font-semibold">Memuat Data...</span>
+    <!-- Top Header Navbar -->
+    <header class="bg-[#111827] border-b border-gray-800 px-6 py-4 flex justify-between items-center shadow-lg">
+        <div>
+            <h1 class="text-xl font-bold tracking-wide text-white flex items-center gap-2">
+                🛞 TYRE MONITORING SYSTEM
+            </h1>
+            <p class="text-xs text-gray-400">Dashboard Operasional & Analisis Performa Tyre</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <span id="status-data" class="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full font-medium">Memuat Data...</span>
+            <div class="bg-gray-800 border border-gray-700 px-3 py-1.5 rounded-lg text-right">
+                <p class="text-xs font-semibold text-gray-200">Administrator System</p>
+                <p class="text-[10px] text-blue-400">Role: Tyre Analyst / Plant</p>
+            </div>
         </div>
     </header>
 
-    <div class="container mx-auto flex flex-col md:flex-row mt-6 gap-6 px-4">
-        
-        <!-- Sidebar Menu Navigasi -->
-        <aside class="w-full md:w-1/4 bg-white p-4 rounded-lg shadow-md h-fit">
-            <h2 class="text-lg font-semibold mb-4 text-gray-700 border-b pb-2">Pilih Dashboard</h2>
-            <nav class="flex flex-col gap-2">
-                <button onclick="switchTab(1)" id="btn-tab-1" class="tab-btn text-left px-3 py-2 rounded bg-blue-600 text-white font-medium">1. Achievement Program</button>
-                <button onclick="switchTab(2)" id="btn-tab-2" class="tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700">2. Tyre Pressure Inspection</button>
-                <button onclick="switchTab(3)" id="btn-tab-3" class="tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700">3. Rolling Tyre</button>
-                <button onclick="switchTab(4)" id="btn-tab-4" class="tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700">4. Backlog Tyre</button>
-                <button onclick="switchTab(5)" id="btn-tab-5" class="tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700">5. Repair Tyre</button>
-                <button onclick="switchTab(6)" id="btn-tab-6" class="tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700">6. Observasi Area Kerja</button>
-            </nav>
-        </aside>
+    <!-- Main Container -->
+    <main class="flex-1 p-6 max-w-[1600px] mx-auto w-full space-y-6">
 
-        <!-- Main Content Area -->
-        <main class="w-full md:w-3/4 bg-white p-6 rounded-lg shadow-md">
-            
-            <!-- Filter Section (Dinamis per Tab) -->
-            <div id="filter-container" class="mb-6 p-4 bg-gray-50 rounded border flex flex-wrap gap-4 items-center">
-                <!-- Filter akan dirender lewat JavaScript -->
+        <!-- Navigasi Tabs (6 Dashboard Sheet) -->
+        <div class="flex flex-wrap gap-2 bg-[#111827] p-2 rounded-xl border border-gray-800">
+            <button onclick="switchTab(1)" id="btn-tab-1" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-blue-600 text-white shadow">1. Achievement Program</button>
+            <button onclick="switchTab(2)" id="btn-tab-2" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">2. Tyre Pressure</button>
+            <button onclick="switchTab(3)" id="btn-tab-3" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">3. Rolling Tyre</button>
+            <button onclick="switchTab(4)" id="btn-tab-4" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">4. Backlog Tyre</button>
+            <button onclick="switchTab(5)" id="btn-tab-5" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">5. Repair Tyre</button>
+            <button onclick="switchTab(6)" id="btn-tab-6" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">6. Observasi Area</button>
+        </div>
+
+        <!-- Filter Bar Section -->
+        <div class="card-bg p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-md">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                <span class="font-semibold text-sm text-gray-200">Filter Data Monitoring</span>
             </div>
+            <div id="filter-container" class="flex flex-wrap gap-3 items-center flex-1 justify-end">
+                <!-- Filter dinamis dirender di sini -->
+            </div>
+            <button onclick="resetFilters()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 px-3 py-2 rounded-lg transition">Reset Filter</button>
+        </div>
 
-            <!-- Display Judul Dashboard -->
-            <h2 id="dashboard-title" class="text-2xl font-bold text-gray-800 mb-4">1. Achievement Program Tyre</h2>
+        <!-- KPI Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="card-bg p-4 rounded-xl border-l-4 border-l-blue-500">
+                <p class="text-xs text-gray-400 uppercase font-semibold">Total Data / Record</p>
+                <h3 id="kpi-total" class="text-2xl font-bold text-white mt-1">0</h3>
+                <p class="text-[10px] text-gray-400 mt-1">Jumlah baris aktif terfilter</p>
+            </div>
+            <div class="card-bg p-4 rounded-xl border-l-4 border-l-emerald-500">
+                <p class="text-xs text-gray-400 uppercase font-semibold">Rata-rata Plan</p>
+                <h3 id="kpi-plan" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
+                <p class="text-[10px] text-gray-400 mt-1">Target operasional</p>
+            </div>
+            <div class="card-bg p-4 rounded-xl border-l-4 border-l-amber-500">
+                <p class="text-xs text-gray-400 uppercase font-semibold">Rata-rata Actual</p>
+                <h3 id="kpi-actual" class="text-2xl font-bold text-amber-400 mt-1">0</h3>
+                <p class="text-[10px] text-gray-400 mt-1">Pencapaian aktual lapangan</p>
+            </div>
+            <div class="card-bg p-4 rounded-xl border-l-4 border-l-purple-500">
+                <p class="text-xs text-gray-400 uppercase font-semibold">Rata-rata Achievement</p>
+                <h3 id="kpi-ach" class="text-2xl font-bold text-purple-400 mt-1">0%</h3>
+                <p class="text-[10px] text-gray-400 mt-1">Persentase keberhasilan</p>
+            </div>
+        </div>
 
-            <!-- Table Container -->
-            <div class="overflow-x-auto">
-                <table id="data-table" class="min-w-full bg-white border border-gray-200">
-                    <thead class="bg-gray-200 text-gray-700 uppercase text-sm">
-                        <!-- Header Tabel Dinamis -->
-                    </thead>
-                    <tbody class="text-gray-600 text-sm divide-y divide-gray-200">
-                        <!-- Isi Data Dinamis -->
-                    </tbody>
+        <!-- Charts Section (Grafik Visualisasi) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="card-bg p-5 rounded-xl shadow-lg">
+                <h3 id="chart-title-1" class="text-sm font-bold text-gray-200 mb-4">Grafik Perbandingan Plan vs Actual</h3>
+                <div class="relative h-64"><canvas id="barChart"></canvas></div>
+            </div>
+            <div class="card-bg p-5 rounded-xl shadow-lg">
+                <h3 id="chart-title-2" class="text-sm font-bold text-gray-200 mb-4">Distribusi Pencapaian Achievement</h3>
+                <div class="relative h-64"><canvas id="lineChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Table Display Section -->
+        <div class="card-bg p-5 rounded-xl shadow-lg">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="dashboard-title" class="text-lg font-bold text-white">1. Achievement Program Tyre</h3>
+                <span class="text-xs text-gray-400">Menampilkan data terfilter</span>
+            </div>
+            <div class="overflow-x-auto max-h-[450px] rounded-lg border border-gray-800">
+                <table id="data-table" class="min-w-full text-left text-sm text-gray-300">
+                    <thead class="bg-[#1f2937] text-xs uppercase text-gray-300 sticky top-0"></thead>
+                    <tbody class="divide-y divide-gray-800"></tbody>
                 </table>
             </div>
+        </div>
 
-        </main>
-    </div>
+    </main>
 
-    <!-- Script Utama Pengolahan Data -->
+    <!-- Script Pengolahan Data & Interaksi Dashboard -->
     <script>
         const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSecE07RLrZyfUlzIKsR-OtX2Ne70t1041dEdedWjA-FneiHc0aBqE5ajjugMKavNCmpnEdlP1SegHn/pub?output=csv";
         
         let globalData = [];
         let currentTab = 1;
+        let myBarChart = null;
+        let myLineChart = null;
 
-        // Ambil Data CSV menggunakan PapaParse
         Papa.parse(CSV_URL, {
             download: true,
             header: false,
             complete: function(results) {
                 globalData = results.data;
-                document.getElementById('status-data').innerText = "Data Terhubung ✓";
-                document.getElementById('status-data').className = "text-sm bg-green-500 px-2 py-1 rounded text-white font-semibold";
+                document.getElementById('status-data').innerText = "Terhubung ✓";
+                document.getElementById('status-data').className = "text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full font-medium";
                 renderDashboard(currentTab);
             },
-            error: function(err) {
-                document.getElementById('status-data').innerText = "Gagal Memuat Data";
-                document.getElementById('status-data').className = "text-sm bg-red-500 px-2 py-1 rounded text-white font-semibold";
+            error: function() {
+                document.getElementById('status-data').innerText = "Koneksi Gagal";
+                document.getElementById('status-data').className = "text-xs bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full font-medium";
             }
         });
 
         function switchTab(tabNumber) {
             currentTab = tabNumber;
-            // Ubah gaya aktif tombol menu
             document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
                 if((idx + 1) === tabNumber) {
-                    btn.className = "tab-btn text-left px-3 py-2 rounded bg-blue-600 text-white font-medium";
+                    btn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-blue-600 text-white shadow";
                 } else {
-                    btn.className = "tab-btn text-left px-3 py-2 rounded hover:bg-gray-100 text-gray-700";
+                    btn.className = "tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800";
                 }
             });
             renderDashboard(tabNumber);
         }
 
+        function resetFilters() {
+            document.querySelectorAll('.dashboard-filter').forEach(el => el.value = "ALL");
+            renderDashboard(currentTab);
+        }
+
         function renderDashboard(tab) {
             const titleEl = document.getElementById('dashboard-title');
-            const filterContainer = document.getElementById('filter-container');
-            const theadEl = document.querySelector('#data-table thead');
-            const tbodyEl = document.querySelector('#data-table tbody');
             
-            filterContainer.innerHTML = '';
-            theadEl.innerHTML = '';
-            tbodyEl.innerHTML = '';
-
-            if(globalData.length === 0) return;
-
-            // Indeks Kolom Berdasarkan Abjad (A=0, B=1, dst.)
             if(tab === 1) {
-                titleEl.innerText = "1. Achievement Program Tyre";
-                filterContainer.innerHTML = `<span class="font-semibold text-gray-700">Filter Bulan:</span> <select id="f-bulan" class="border p-2 rounded"><option>SEMUA BULAN / YEAR TO DATE</option></select>`;
-                
-                theadEl.innerHTML = `<tr><th class="py-3 px-4 border">Program / Section</th><th class="py-3 px-4 border">Plan</th><th class="py-3 px-4 border">Actual</th><th class="py-3 px-4 border">Achievement</th></tr>`;
-                
-                // Menggabungkan ringkasan data dari beberapa bagian
-                let rowsHtml = '';
-                // Tyre Pressure (Kolom 0, 4, 5, 6)
-                for(let i=1; i<globalData.length; i++) {
-                    if(globalData[i][0]) {
-                        rowsHtml += `<tr class="hover:bg-gray-50"><td class="py-2 px-4 border">Tyre Pressure - ${globalData[i][0]}</td><td class="py-2 px-4 border">${globalData[i][4]||'-'}</td><td class="py-2 px-4 border">${globalData[i][5]||'-'}</td><td class="py-2 px-4 border font-bold">${globalData[i][6]||'-'}</td></tr>`;
-                    }
-                }
-                tbodyEl.innerHTML = rowsHtml;
-
+                titleEl.innerText = "1. Achievement Program Tyre (Ringkasan Keseluruhan)";
+                setupAchievementOverview();
             } else if(tab === 2) {
-                // 2. TYRE PRESSURE INSPECTION (Filter: A, B, C | Tampil: E, F, G)
                 titleEl.innerText = "2. Tyre Pressure Inspection";
-                setupFilterAndTable(0, 1, 2, [4, 5, 6], ["Plan (Kolom E)", "Actual (Kolom F)", "Achievement (Kolom G)"], ["Section (Kolom A)", "Bulan (Kolom B)", "Tanggal (Kolom C)"]);
-
+                setupGenericDashboard(0, 1, 2, [4, 5, 6], ["Section (A)", "Bulan (B)", "Tanggal (C)"], ["Plan (E)", "Actual (F)", "Achievement (G)"]);
             } else if(tab === 3) {
-                // 3. ROLLING TYRE (Filter: J(9), K(10), L(11) | Tampil: N(13), O(14), P(15))
                 titleEl.innerText = "3. Rolling Tyre";
-                setupFilterAndTable(9, 10, 11, [13, 14, 15], ["Plan (Kolom N)", "Actual (Kolom O)", "Achievement (Kolom P)"], ["Section (Kolom J)", "Bulan (Kolom K)", "Tanggal (Kolom L)"]);
-
+                setupGenericDashboard(9, 10, 11, [13, 14, 15], ["Section (J)", "Bulan (K)", "Tanggal (L)"], ["Plan (N)", "Actual (O)", "Achievement (P)"]);
             } else if(tab === 4) {
-                // 4. BACKLOG TYRE (Filter: S(18), T(19) | Tampil: V(21), W(22), X(23))
                 titleEl.innerText = "4. Backlog Tyre";
-                setupFilterAndTableOnlyTwo(18, 19, [21, 22, 23], ["Plan (Kolom V)", "Actual (Kolom W)", "Achievement (Kolom X)"], ["Bulan (Kolom S)", "Tanggal (Kolom T)"]);
-
+                setupBacklogDashboard(18, 19, [21, 22, 23], ["Bulan (S)", "Tanggal (T)"], ["Plan (V)", "Actual (W)", "Achievement (X)"]);
             } else if(tab === 5) {
-                // 5. REPAIR TYRE (Filter: AA(26), AB(27), AC(28) | Tampil: AE(30), AF(31), AG(32))
                 titleEl.innerText = "5. Repair Tyre";
-                setupFilterAndTable(26, 27, 28, [30, 31, 32], ["Plan (Kolom AE)", "Actual (Kolom AF)", "Achievement (Kolom AG)"], ["Section (Kolom AA)", "Bulan (Kolom AB)", "Tanggal (Kolom AC)"]);
-
+                setupGenericDashboard(26, 27, 28, [30, 31, 32], ["Section (AA)", "Bulan (AB)", "Tanggal (AC)"], ["Plan (AE)", "Actual (AF)", "Achievement (AG)"]);
             } else if(tab === 6) {
-                // 6. OBSERVASI AREA KERJA TYRE (Filter: AJ(35), AK(36), AL(37) | Tampil: AN(39), AO(40), AP(41))
                 titleEl.innerText = "6. Observasi Area Kerja Tyre";
-                setupFilterAndTable(35, 36, 37, [39, 40, 41], ["Plan (Kolom AN)", "Actual (Kolom AO)", "Achievement (Kolom AP)"], ["Location (Kolom AJ)", "Bulan (Kolom AK)", "Tanggal (Kolom AL)"]);
+                setupGenericDashboard(35, 36, 37, [39, 40, 41], ["Location (AJ)", "Bulan (AK)", "Tanggal (AL)"], ["Plan (AN)", "Actual (AO)", "Achievement (AP)"]);
             }
         }
 
-        // Helper untuk render filter 3 kolom dan tabel data
-        function setupFilterAndTable(f1Idx, f2Idx, f3Idx, targetCols, targetNames, filterLabels) {
-            const filterContainer = document.getElementById('filter-container');
-            const theadEl = document.querySelector('#data-table thead');
-            const tbodyEl = document.querySelector('#data-table tbody');
+        function updateKPIAndCharts(labels, planVals, actVals, achVals) {
+            document.getElementById('kpi-total').innerText = labels.length;
+            
+            let avgPlan = planVals.length ? (planVals.reduce((a,b)=>a+b,0)/planVals.length).toFixed(1) : 0;
+            let avgAct = actVals.length ? (actVals.reduce((a,b)=>a+b,0)/actVals.length).toFixed(1) : 0;
+            let avgAch = achVals.length ? (achVals.reduce((a,b)=>a+b,0)/achVals.length).toFixed(1) : 0;
 
-            // Ambil unik value untuk dropdown filter
-            let f1Set = [...new Set(globalData.slice(1).map(row => row[f1Idx]))].filter(Boolean);
-            let f2Set = [...new Set(globalData.slice(1).map(row => row[f2Idx]))].filter(Boolean);
-            let f3Set = [...new Set(globalData.slice(1).map(row => row[f3Idx]))].filter(Boolean);
+            document.getElementById('kpi-plan').innerText = avgPlan;
+            document.getElementById('kpi-actual').innerText = avgAct;
+            document.getElementById('kpi-ach').innerText = avgAch + "%";
 
-            filterContainer.innerHTML = `
-                <div><label class="block text-xs font-bold text-gray-600">${filterLabels[0]}</label><select id="filter-1" class="border p-1.5 rounded text-sm"><option value="ALL">ALL</option>${f1Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
-                <div><label class="block text-xs font-bold text-gray-600">${filterLabels[1]}</label><select id="filter-2" class="border p-1.5 rounded text-sm"><option value="ALL">SEMUA BULAN</option>${f2Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
-                <div><label class="block text-xs font-bold text-gray-600">${filterLabels[2]}</label><select id="filter-3" class="border p-1.5 rounded text-sm"><option value="ALL">SEMUA TANGGAL</option>${f3Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
-            `;
+            // Render Chart Bar
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            if(myBarChart) myBarChart.destroy();
+            myBarChart = new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: labels.slice(0, 15), // Batasi max 15 data agar rapi
+                    datasets: [
+                        { label: 'Plan', data: planVals.slice(0, 15), backgroundColor: '#10b981' },
+                        { label: 'Actual', data: actVals.slice(0, 15), backgroundColor: '#f59e0b' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#9ca3af' } } }, scales: { x: { ticks: { color: '#9ca3af' } }, y: { ticks: { color: '#9ca3af' } } } }
+            });
 
-            theadEl.innerHTML = `<tr><th class="py-3 px-4 border">${filterLabels[0]}</th><th class="py-3 px-4 border">${filterLabels[1]}</th><th class="py-3 px-4 border">${filterLabels[2]}</th><th class="py-3 px-4 border">${targetNames[0]}</th><th class="py-3 px-4 border">${targetNames[1]}</th><th class="py-3 px-4 border">${targetNames[2]}</th></tr>`;
-
-            function drawTable() {
-                let val1 = document.getElementById('filter-1').value;
-                let val2 = document.getElementById('filter-2').value;
-                let val3 = document.getElementById('filter-3').value;
-
-                let html = '';
-                for(let i=1; i<globalData.length; i++) {
-                    let r = globalData[i];
-                    if(!r[f1Idx]) continue;
-                    
-                    if(val1 !== 'ALL' && r[f1Idx] !== val1) continue;
-                    if(val2 !== 'ALL' && r[f2Idx] !== val2) continue;
-                    if(val3 !== 'ALL' && r[f3Idx] !== val3) continue;
-
-                    html += `<tr class="hover:bg-gray-50">
-                        <td class="py-2 px-4 border">${r[f1Idx]||'-'}</td>
-                        <td class="py-2 px-4 border">${r[f2Idx]||'-'}</td>
-                        <td class="py-2 px-4 border">${r[f3Idx]||'-'}</td>
-                        <td class="py-2 px-4 border">${r[targetCols[0]]||'-'}</td>
-                        <td class="py-2 px-4 border">${r[targetCols[1]]||'-'}</td>
-                        <td class="py-2 px-4 border font-bold">${r[targetCols[2]]||'-'}</td>
-                    </tr>`;
-                }
-                tbodyEl.innerHTML = html || `<tr><td colspan="6" class="text-center py-4 text-gray-500">Tidak ada data ditemukan</td></tr>`;
-            }
-
-            drawTable();
-            document.getElementById('filter-1').addEventListener('change', drawTable);
-            document.getElementById('filter-2').addEventListener('change', drawTable);
-            document.getElementById('filter-3').addEventListener('change', drawTable);
+            // Render Chart Line
+            const ctxLine = document.getElementById('lineChart').getContext('2d');
+            if(myLineChart) myLineChart.destroy();
+            myLineChart = new Chart(ctxLine, {
+                type: 'line',
+                data: {
+                    labels: labels.slice(0, 15),
+                    datasets: [{ label: 'Achievement (%)', data: achVals.slice(0, 15), borderColor: '#8b5cf6', backgroundColor: 'rgba(139, 92, 246, 0.1)', fill: true, tension: 0.3 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#9ca3af' } } }, scales: { x: { ticks: { color: '#9ca3af' } }, y: { ticks: { color: '#9ca3af' } } } }
+            });
         }
 
-        // Helper khusus untuk Backlog (2 Filter)
-        function setupFilterAndTableOnlyTwo(f1Idx, f2Idx, targetCols, targetNames, filterLabels) {
+        // Tab 1: Achievement Program Tyre (Ringkasan Gabungan)
+        function setupAchievementOverview() {
             const filterContainer = document.getElementById('filter-container');
-            const theadEl = document.querySelector('#data-table thead');
-            const tbodyEl = document.querySelector('#data-table tbody');
-
-            let f1Set = [...new Set(globalData.slice(1).map(row => row[f1Idx]))].filter(Boolean);
-            let f2Set = [...new Set(globalData.slice(1).map(row => row[f2Idx]))].filter(Boolean);
+            let bulanSet = [...new Set(globalData.slice(1).map(r => r[1]))].filter(Boolean);
 
             filterContainer.innerHTML = `
-                <div><label class="block text-xs font-bold text-gray-600">${filterLabels[0]}</label><select id="filter-1" class="border p-1.5 rounded text-sm"><option value="ALL">SEMUA BULAN</option>${f1Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
-                <div><label class="block text-xs font-bold text-gray-600">${filterLabels[1]}</label><select id="filter-2" class="border p-1.5 rounded text-sm"><option value="ALL">SEMUA TANGGAL</option>${f2Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+                <div><select id="f-bulan-ach" class="dashboard-filter input-dark text-xs p-2 rounded-lg"><option value="ALL">SEMUA BULAN / YTD</option>${bulanSet.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
             `;
 
-            theadEl.innerHTML = `<tr><th class="py-3 px-4 border">${filterLabels[0]}</th><th class="py-3 px-4 border">${filterLabels[1]}</th><th class="py-3 px-4 border">${targetNames[0]}</th><th class="py-3 px-4 border">${targetNames[1]}</th><th class="py-3 px-4 border">${targetNames[2]}</th></tr>`;
+            const thead = document.querySelector('#data-table thead');
+            const tbody = document.querySelector('#data-table tbody');
+            thead.innerHTML = `<tr><th class="p-3 border-b border-gray-800">Program / Section</th><th class="p-3 border-b border-gray-800">Plan</th><th class="p-3 border-b border-gray-800">Actual</th><th class="p-3 border-b border-gray-800">Achievement</th></tr>`;
 
-            function drawTable() {
-                let val1 = document.getElementById('filter-1').value;
-                let val2 = document.getElementById('filter-2').value;
+            function draw() {
+                let selBulan = document.getElementById('f-bulan-ach').value;
+                let rowsHtml = '';
+                let labels = [], plans = [], actuals = [], achs = [];
 
-                let html = '';
                 for(let i=1; i<globalData.length; i++) {
                     let r = globalData[i];
-                    if(!r[f1Idx] && !r[f2Idx]) continue;
-                    
-                    if(val1 !== 'ALL' && r[f1Idx] !== val1) continue;
-                    if(val2 !== 'ALL' && r[f2Idx] !== val2) continue;
+                    if(!r[0]) continue;
+                    if(selBulan !== 'ALL' && r[1] !== selBulan) continue;
 
-                    html += `<tr class="hover:bg-gray-50">
-                        <td class="py-2 px-4 border">${r[f1Idx]||'-'}</td>
-                        <td class="py-2 px-4 border">${r[f2Idx]||'-'}</td>
-                        <td class="py-2 px-4 border">${r[targetCols[0]]||'-'}</td>
-                        <td class="py-2 px-4 border">${r[targetCols[1]]||'-'}</td>
-                        <td class="py-2 px-4 border font-bold">${r[targetCols[2]]||'-'}</td>
+                    let p = parseFloat(r[4]) || 0;
+                    let a = parseFloat(r[5]) || 0;
+                    let ac = parseFloat(r[6]) || 0;
+
+                    labels.push(r[0]); plans.push(p); actuals.push(a); achs.push(ac);
+
+                    rowsHtml += `<tr class="hover:bg-gray-800/50">
+                        <td class="p-3 border-b border-gray-800">Tyre Pressure - ${r[0]}</td>
+                        <td class="p-3 border-b border-gray-800 text-emerald-400">${r[4]||'-'}</td>
+                        <td class="p-3 border-b border-gray-800 text-amber-400">${r[5]||'-'}</td>
+                        <td class="p-3 border-b border-gray-800 font-bold text-purple-400">${r[6]||'-'}</td>
                     </tr>`;
                 }
-                tbodyEl.innerHTML = html || `<tr><td colspan="5" class="text-center py-4 text-gray-500">Tidak ada data ditemukan</td></tr>`;
+                tbody.innerHTML = rowsHtml || `<tr><td colspan="4" class="text-center p-4 text-gray-500">Tidak ada data</td></tr>`;
+                updateKPIAndCharts(labels, plans, actuals, achs);
             }
 
-            drawTable();
-            document.getElementById('filter-1').addEventListener('change', drawTable);
-            document.getElementById('filter-2').addEventListener('change', drawTable);
+            draw();
+            document.getElementById('f-bulan-ach').addEventListener('change', draw);
+        }
+
+        // Generic Dashboard Setup untuk Tab 2, 3, 5, 6 (3 Filter & 3 Output Target)
+        function setupGenericDashboard(f1, f2, f3, targets, filterLabels, targetNames) {
+            const filterContainer = document.getElementById('filter-container');
+            let f1Set = [...new Set(globalData.slice(1).map(r => r[f1]))].filter(Boolean);
+            let f2Set = [...new Set(globalData.slice(1).map(r => r[f2]))].filter(Boolean);
+            let f3Set = [...new Set(globalData.slice(1).map(r => r[f3]))].filter(Boolean);
+
+            filterContainer.innerHTML = `
+                <div><select id="gen-f1" class="dashboard-filter input-dark text-xs p-2 rounded-lg"><option value="ALL">ALL ${filterLabels[0]}</option>${f1Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+                <div><select id="gen-f2" class="dashboard-filter input-dark text-xs p-2 rounded-lg"><option value="ALL">SEMUA ${filterLabels[1]}</option>${f2Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+                <div><select id="gen-f3" class="dashboard-filter input-dark text-xs p-2 rounded-lg"><option value="ALL">SEMUA ${filterLabels[2]}</option>${f3Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+            `;
+
+            const thead = document.querySelector('#data-table thead');
+            const tbody = document.querySelector('#data-table tbody');
+            thead.innerHTML = `<tr><th class="p-3 border-b border-gray-800">${filterLabels[0]}</th><th class="p-3 border-b border-gray-800">${filterLabels[1]}</th><th class="p-3 border-b border-gray-800">${filterLabels[2]}</th><th class="p-3 border-b border-gray-800">${targetNames[0]}</th><th class="p-3 border-b border-gray-800">${targetNames[1]}</th><th class="p-3 border-b border-gray-800">${targetNames[2]}</th></tr>`;
+
+            function draw() {
+                let v1 = document.getElementById('gen-f1').value;
+                let v2 = document.getElementById('gen-f2').value;
+                let v3 = document.getElementById('gen-f3').value;
+
+                let rowsHtml = '';
+                let labels = [], plans = [], actuals = [], achs = [];
+
+                for(let i=1; i<globalData.length; i++) {
+                    let r = globalData[i];
+                    if(!r[f1]) continue;
+                    if(v1 !== 'ALL' && r[f1] !== v1) continue;
+                    if(v2 !== 'ALL' && r[f2] !== v2) continue;
+                    if(v3 !== 'ALL' && r[f3] !== v3) continue;
+
+                    let p = parseFloat(r[targets[0]]) || 0;
+                    let a = parseFloat(r[targets[1]]) || 0;
+                    let ac = parseFloat(r[targets[2]]) || 0;
+
+                    labels.push(r[f1]); plans.push(p); actuals.push(a); achs.push(ac);
+
+                    rowsHtml += `<tr class="hover:bg-gray-800/50">
+                        <td class="p-3 border-b border-gray-800">${r[f1]||'-'}</td>
+                        <td class="p-3 border-b border-gray-800">${r[f2]||'-'}</td>
+                        <td class="p-3 border-b border-gray-800">${r[f3]||'-'}</td>
+                        <td class="p-3 border-b border-gray-800 text-emerald-400">${r[targets[0]]||'-'}</td>
+                        <td class="p-3 border-b border-gray-800 text-amber-400">${r[targets[1]]||'-'}</td>
+                        <td class="p-3 border-b border-gray-800 font-bold text-purple-400">${r[targets[2]]||'-'}</td>
+                    </tr>`;
+                }
+                tbody.innerHTML = rowsHtml || `<tr><td colspan="6" class="text-center p-4 text-gray-500">Tidak ada data ditemukan</td></tr>`;
+                updateKPIAndCharts(labels, plans, actuals, achs);
+            }
+
+            draw();
+            document.getElementById('gen-f1').addEventListener('change', draw);
+            document.getElementById('gen-f2').addEventListener('change', draw);
+            document.getElementById('gen-f3').addEventListener('change', draw);
+        }
+
+        // Tab 4: Backlog Tyre (Khusus 2 Filter)
+        function setupBacklogDashboard(f1, f2, targets, filterLabels, targetNames) {
+            const filterContainer = document.getElementById('filter-container');
+            let f1Set = [...new Set(globalData.slice(1).map(r => r[f1]))].filter(Boolean);
+            let f2Set = [...new Set(globalData.slice(1).map(r => r[f2]))].filter(Boolean);
+
+            filterContainer.innerHTML = `
+                <div><select id="back-f1" class="dashboard-filter input-dark text-xs p-2 rounded-lg"><option value="ALL">SEMUA ${filterLabels[0]}</option>${f1Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+                <div><select id="back-f2" class="dashboard-filter input-dark text-xs p-2 rounded-lg"><option value="ALL">SEMUA ${filterLabels[1]}</option>${f2Set.map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+            `;
+
+            const thead = document.querySelector('#data-table thead');
+            const tbody = document.querySelector('#data-table tbody');
+            thead.innerHTML = `<tr><th class="p-3 border-b border-gray-800">${filterLabels[0]}</th><th class="p-3 border-b border-gray-800">${filterLabels[1]}</th><th class="p-3 border-b border-gray-800">${targetNames[0]}</th><th class="p-3 border-b border-gray-800">${targetNames[1]}</th><th class="p-3 border-b border-gray-800">${targetNames[2]}</th></tr>`;
+
+            function draw() {
+                let v1 = document.getElementById('back-f1').value;
+                let v2 = document.getElementById('back-f2').value;
+
+                let rowsHtml = '';
+                let labels = [], plans = [], actuals = [], achs = [];
+
+                for(let i=1; i<globalData.length; i++) {
+                    let r = globalData[i];
+                    if(!r[f1] && !r[f2]) continue;
+                    if(v1 !== 'ALL' && r[f1] !== v1) continue;
+                    if(v2 !== 'ALL' && r[f2] !== v2) continue;
+
+                    let p = parseFloat(r[targets[0]]) || 0;
+                    let a = parseFloat(r[targets[1]]) || 0;
+                    let ac = parseFloat(r[targets[2]]) || 0;
+
+                    labels.push(r[f1] || 'Backlog'); plans.push(p); actuals.push(a); achs.push(ac);
+
+                    rowsHtml += `<tr class="hover:bg-gray-800/50">
+                        <td class="p-3 border-b border-gray-800">${r[f1]||'-'}</td>
+                        <td class="p-3 border-b border-gray-800">${r[f2]||'-'}</td>
+                        <td class="p-3 border-b border-gray-800 text-emerald-400">${r[targets[0]]||'-'}</td>
+                        <td class="p-3 border-b border-gray-800 text-amber-400">${r[targets[1]]||'-'}</td>
+                        <td class="p-3 border-b border-gray-800 font-bold text-purple-400">${r[targets[2]]||'-'}</td>
+                    </tr>`;
+                }
+                tbody.innerHTML = rowsHtml || `<tr><td colspan="5" class="text-center p-4 text-gray-500">Tidak ada data ditemukan</td></tr>`;
+                updateKPIAndCharts(labels, plans, actuals, achs);
+            }
+
+            draw();
+            document.getElementById('back-f1').addEventListener('change', draw);
+            document.getElementById('back-f2').addEventListener('change', draw);
         }
     </script>
 </body>
