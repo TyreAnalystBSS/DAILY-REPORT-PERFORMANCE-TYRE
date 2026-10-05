@@ -18,71 +18,77 @@
 </head>
 <body class="font-sans antialiased min-h-screen flex flex-col">
 
-    <!-- Top Header Navbar -->
-    <header class="bg-[#111827] border-b border-gray-800 px-6 py-4 flex justify-between items-center shadow-lg">
-        <div>
-            <h1 class="text-xl font-bold tracking-wide text-white flex items-center gap-2">
-                🛞 TYRE MONITORING SYSTEM
-            </h1>
-            <p class="text-xs text-gray-400">Dashboard Operasional & Analisis Performa Tyre</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <span id="status-data" class="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full font-medium">Memuat Data...</span>
-            <div class="bg-gray-800 border border-gray-700 px-3 py-1.5 rounded-lg text-right">
-                <p class="text-xs font-semibold text-gray-200">Administrator System</p>
-                <p class="text-[10px] text-blue-400">Role: Tyre Analyst / Plant</p>
+    <!-- Sticky Header & Controls Container -->
+    <div class="sticky top-0 z-50 bg-[#0b0f19]/95 backdrop-blur border-b border-gray-800 shadow-xl pb-4">
+        <!-- Top Header Navbar -->
+        <header class="bg-[#111827] border-b border-gray-800 px-6 py-4 flex justify-between items-center shadow-lg">
+            <div>
+                <h1 class="text-xl font-bold tracking-wide text-white flex items-center gap-2">
+                    🛞 TYRE MONITORING SYSTEM
+                </h1>
+                <p class="text-xs text-gray-400">Dashboard Operasional & Analisis Performa Tyre</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="status-data" class="text-xs bg-amber-500/20 text-amber-400 border border-amber-500/30 px-3 py-1 rounded-full font-medium">Memuat Data...</span>
+                <div class="bg-gray-800 border border-gray-700 px-3 py-1.5 rounded-lg text-right">
+                    <p class="text-xs font-semibold text-gray-200">Administrator System</p>
+                    <p class="text-[10px] text-blue-400">Role: Tyre Analyst / Plant</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sub-container untuk Navigasi, Filter, dan KPI agar ikut membeku saat di-scroll -->
+        <div class="max-w-[1600px] mx-auto w-full px-6 pt-4 space-y-4">
+            <!-- Navigasi Tabs (6 Dashboard Sheet) -->
+            <div class="flex flex-wrap gap-2 bg-[#111827] p-2 rounded-xl border border-gray-800">
+                <button onclick="switchTab(1)" id="btn-tab-1" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-blue-600 text-white shadow">1. Achievement Program</button>
+                <button onclick="switchTab(2)" id="btn-tab-2" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">2. Tyre Pressure</button>
+                <button onclick="switchTab(3)" id="btn-tab-3" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">3. Rolling Tyre</button>
+                <button onclick="switchTab(4)" id="btn-tab-4" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">4. Backlog Tyre</button>
+                <button onclick="switchTab(5)" id="btn-tab-5" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">5. Repair Tyre</button>
+                <button onclick="switchTab(6)" id="btn-tab-6" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">6. Observasi Area</button>
+            </div>
+
+            <!-- Filter Bar Section -->
+            <div class="card-bg p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-md">
+                <div class="flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    <span class="font-semibold text-sm text-gray-200">Filter Data Monitoring</span>
+                </div>
+                <div id="filter-container" class="flex flex-wrap gap-3 items-center flex-1 justify-end">
+                    <!-- Filter dinamis dirender di sini -->
+                </div>
+                <button onclick="resetFilters()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 px-3 py-2 rounded-lg transition">Reset Filter</button>
+            </div>
+
+            <!-- KPI Summary Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="card-bg p-4 rounded-xl border-l-4 border-l-blue-500">
+                    <p class="text-xs text-gray-400 uppercase font-semibold">Total Data / Record</p>
+                    <h3 id="kpi-total" class="text-2xl font-bold text-white mt-1">0</h3>
+                    <p class="text-[10px] text-gray-400 mt-1">Jumlah baris aktif terfilter</p>
+                </div>
+                <div class="card-bg p-4 rounded-xl border-l-4 border-l-emerald-500">
+                    <p class="text-xs text-gray-400 uppercase font-semibold">Rata-rata Plan</p>
+                    <h3 id="kpi-plan" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
+                    <p class="text-[10px] text-gray-400 mt-1">Target operasional</p>
+                </div>
+                <div class="card-bg p-4 rounded-xl border-l-4 border-l-amber-500">
+                    <p class="text-xs text-gray-400 uppercase font-semibold">Rata-rata Actual</p>
+                    <h3 id="kpi-actual" class="text-2xl font-bold text-amber-400 mt-1">0</h3>
+                    <p class="text-[10px] text-gray-400 mt-1">Pencapaian aktual lapangan</p>
+                </div>
+                <div class="card-bg p-4 rounded-xl border-l-4 border-l-purple-500">
+                    <p class="text-xs text-gray-400 uppercase font-semibold">Rata-rata Achievement</p>
+                    <h3 id="kpi-ach" class="text-2xl font-bold text-purple-400 mt-1">0%</h3>
+                    <p class="text-[10px] text-gray-400 mt-1">Persentase keberhasilan</p>
+                </div>
             </div>
         </div>
-    </header>
+    </div>
 
-    <!-- Main Container -->
+    <!-- Main Content Area (Bagian yang bisa di-scroll) -->
     <main class="flex-1 p-6 max-w-[1600px] mx-auto w-full space-y-6">
-
-        <!-- Navigasi Tabs (6 Dashboard Sheet) -->
-        <div class="flex flex-wrap gap-2 bg-[#111827] p-2 rounded-xl border border-gray-800">
-            <button onclick="switchTab(1)" id="btn-tab-1" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition bg-blue-600 text-white shadow">1. Achievement Program</button>
-            <button onclick="switchTab(2)" id="btn-tab-2" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">2. Tyre Pressure</button>
-            <button onclick="switchTab(3)" id="btn-tab-3" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">3. Rolling Tyre</button>
-            <button onclick="switchTab(4)" id="btn-tab-4" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">4. Backlog Tyre</button>
-            <button onclick="switchTab(5)" id="btn-tab-5" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">5. Repair Tyre</button>
-            <button onclick="switchTab(6)" id="btn-tab-6" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-gray-400 hover:text-white hover:bg-gray-800">6. Observasi Area</button>
-        </div>
-
-        <!-- Filter Bar Section -->
-        <div class="card-bg p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-md">
-            <div class="flex items-center gap-2">
-                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                <span class="font-semibold text-sm text-gray-200">Filter Data Monitoring</span>
-            </div>
-            <div id="filter-container" class="flex flex-wrap gap-3 items-center flex-1 justify-end">
-                <!-- Filter dinamis dirender di sini -->
-            </div>
-            <button onclick="resetFilters()" class="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700 px-3 py-2 rounded-lg transition">Reset Filter</button>
-        </div>
-
-        <!-- KPI Summary Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="card-bg p-4 rounded-xl border-l-4 border-l-blue-500">
-                <p class="text-xs text-gray-400 uppercase font-semibold">Total Data / Record</p>
-                <h3 id="kpi-total" class="text-2xl font-bold text-white mt-1">0</h3>
-                <p class="text-[10px] text-gray-400 mt-1">Jumlah baris aktif terfilter</p>
-            </div>
-            <div class="card-bg p-4 rounded-xl border-l-4 border-l-emerald-500">
-                <p class="text-xs text-gray-400 uppercase font-semibold">Rata-rata Plan</p>
-                <h3 id="kpi-plan" class="text-2xl font-bold text-emerald-400 mt-1">0</h3>
-                <p class="text-[10px] text-gray-400 mt-1">Target operasional</p>
-            </div>
-            <div class="card-bg p-4 rounded-xl border-l-4 border-l-amber-500">
-                <p class="text-xs text-gray-400 uppercase font-semibold">Rata-rata Actual</p>
-                <h3 id="kpi-actual" class="text-2xl font-bold text-amber-400 mt-1">0</h3>
-                <p class="text-[10px] text-gray-400 mt-1">Pencapaian aktual lapangan</p>
-            </div>
-            <div class="card-bg p-4 rounded-xl border-l-4 border-l-purple-500">
-                <p class="text-xs text-gray-400 uppercase font-semibold">Rata-rata Achievement</p>
-                <h3 id="kpi-ach" class="text-2xl font-bold text-purple-400 mt-1">0%</h3>
-                <p class="text-[10px] text-gray-400 mt-1">Persentase keberhasilan</p>
-            </div>
-        </div>
 
         <!-- Charts Section (Grafik Visualisasi) -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -177,11 +183,11 @@
             }
         }
 
-        function updateKPIAndCharts(labels, planVals, actVals, achVals) {
+        function updateKPIAndCharts(labels, planVals, actualVals, achVals) {
             document.getElementById('kpi-total').innerText = labels.length;
             
             let avgPlan = planVals.length ? (planVals.reduce((a,b)=>a+b,0)/planVals.length).toFixed(1) : 0;
-            let avgAct = actVals.length ? (actVals.reduce((a,b)=>a+b,0)/actVals.length).toFixed(1) : 0;
+            let avgAct = actualVals.length ? (actualVals.reduce((a,b)=>a+b,0)/actualVals.length).toFixed(1) : 0;
             let avgAch = achVals.length ? (achVals.reduce((a,b)=>a+b,0)/achVals.length).toFixed(1) : 0;
 
             document.getElementById('kpi-plan').innerText = avgPlan;
@@ -194,10 +200,10 @@
             myBarChart = new Chart(ctxBar, {
                 type: 'bar',
                 data: {
-                    labels: labels.slice(0, 15), // Batasi max 15 data agar rapi
+                    labels: labels.slice(0, 15),
                     datasets: [
                         { label: 'Plan', data: planVals.slice(0, 15), backgroundColor: '#10b981' },
-                        { label: 'Actual', data: actVals.slice(0, 15), backgroundColor: '#f59e0b' }
+                        { label: 'Actual', data: actualVals.slice(0, 15), backgroundColor: '#f59e0b' }
                     ]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#9ca3af' } } }, scales: { x: { ticks: { color: '#9ca3af' } }, y: { ticks: { color: '#9ca3af' } } } }
@@ -216,7 +222,6 @@
             });
         }
 
-        // Tab 1: Achievement Program Tyre (Ringkasan Gabungan)
         function setupAchievementOverview() {
             const filterContainer = document.getElementById('filter-container');
             let bulanSet = [...new Set(globalData.slice(1).map(r => r[1]))].filter(Boolean);
@@ -260,7 +265,6 @@
             document.getElementById('f-bulan-ach').addEventListener('change', draw);
         }
 
-        // Generic Dashboard Setup untuk Tab 2, 3, 5, 6 (3 Filter & 3 Output Target)
         function setupGenericDashboard(f1, f2, f3, targets, filterLabels, targetNames) {
             const filterContainer = document.getElementById('filter-container');
             let f1Set = [...new Set(globalData.slice(1).map(r => r[f1]))].filter(Boolean);
@@ -317,7 +321,6 @@
             document.getElementById('gen-f3').addEventListener('change', draw);
         }
 
-        // Tab 4: Backlog Tyre (Khusus 2 Filter)
         function setupBacklogDashboard(f1, f2, targets, filterLabels, targetNames) {
             const filterContainer = document.getElementById('filter-container');
             let f1Set = [...new Set(globalData.slice(1).map(r => r[f1]))].filter(Boolean);
